@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vinkelner</title>
+<meta name="description" content="Vinkelner – skreddersydde vintips fra Gustav. Prototype.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vinkelner">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F3F0EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101413" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="mark" viewBox="0 0 64 32"><path fill="currentColor" d="M4.7 8.1 L4.6 9.1 L4.4 10.1 L4.4 11.0 L4.3 11.8 L4.3 12.6 L4.4 13.3 L4.4 14.0 L4.6 14.6 L4.7 15.1 L4.9 15.5 L5.1 15.9 L5.3 16.3 L5.5 16.6 L5.8 16.8 L6.0 17.0 L6.3 17.1 L6.5 17.2 L6.8 17.3 L7.1 17.3 L7.4 17.4 L7.7 17.4 L8.1 17.4 L8.4 17.4 L8.8 17.4 L9.3 17.3 L9.7 17.3 L10.2 17.2 L10.7 17.1 L11.2 17.0 L11.8 16.8 L12.3 16.7 L12.9 16.5 L13.5 16.3 L14.1 16.2 L14.7 16.0 L15.4 15.8 L16.0 15.5 L16.7 15.3 L17.4 15.1 L18.0 14.9 L18.7 14.7 L19.4 14.4 L20.1 14.2 L20.8 14.0 L21.6 13.7 L22.3 13.5 L23.0 13.3 L23.8 13.1 L24.5 12.9 L25.2 12.7 L26.0 12.6 L26.7 12.4 L27.5 12.3 L28.3 12.2 L29.1 12.1 L29.8 12.0 L30.6 12.0 L31.5 12.0 L32.3 12.0 L33.1 12.1 L30.9 12.1 L31.7 12.0 L32.5 12.0 L33.4 12.0 L34.2 12.0 L34.9 12.1 L35.7 12.2 L36.5 12.3 L37.3 12.4 L38.0 12.6 L38.8 12.7 L39.5 12.9 L40.2 13.1 L41.0 13.3 L41.7 13.5 L42.4 13.7 L43.2 14.0 L43.9 14.2 L44.6 14.4 L45.3 14.7 L46.0 14.9 L46.6 15.1 L47.3 15.3 L48.0 15.5 L48.6 15.8 L49.3 16.0 L49.9 16.2 L50.5 16.3 L51.1 16.5 L51.7 16.7 L52.2 16.8 L52.8 17.0 L53.3 17.1 L53.8 17.2 L54.3 17.3 L54.7 17.3 L55.2 17.4 L55.6 17.4 L55.9 17.4 L56.3 17.4 L56.6 17.4 L56.9 17.3 L57.2 17.3 L57.5 17.2 L57.7 17.1 L58.0 17.0 L58.2 16.8 L58.5 16.6 L58.7 16.3 L58.9 15.9 L59.1 15.5 L59.3 15.1 L59.4 14.6 L59.6 14.0 L59.6 13.3 L59.7 12.6 L59.7 11.8 L59.6 11.0 L59.6 10.1 L59.4 9.1 L59.3 8.1 L59.7 7.9 L60.1 8.9 L60.4 9.9 L60.6 10.8 L60.8 11.7 L61.0 12.5 L61.1 13.3 L61.2 14.0 L61.2 14.7 L61.2 15.4 L61.1 16.0 L61.1 16.7 L60.9 17.2 L60.7 17.8 L60.5 18.4 L60.1 18.9 L59.8 19.3 L59.4 19.8 L58.9 20.2 L58.4 20.5 L57.9 20.8 L57.3 21.1 L56.8 21.3 L56.2 21.5 L55.6 21.7 L54.9 21.8 L54.3 21.9 L53.7 22.0 L53.0 22.0 L52.3 22.0 L51.6 22.0 L51.0 22.0 L50.3 22.0 L49.6 22.0 L48.8 22.0 L48.1 21.9 L47.4 21.8 L46.7 21.8 L46.0 21.7 L45.2 21.6 L44.5 21.6 L43.8 21.5 L43.1 21.4 L42.4 21.4 L41.7 21.3 L41.0 21.2 L40.3 21.2 L39.6 21.1 L39.0 21.1 L38.3 21.1 L37.7 21.1 L37.1 21.1 L36.5 21.1 L36.0 21.2 L35.5 21.2 L35.0 21.3 L34.5 21.4 L34.1 21.5 L33.7 21.6 L33.4 21.7 L33.1 21.9 L32.0 20.3 L30.9 21.9 L30.6 21.7 L30.3 21.6 L29.9 21.5 L29.5 21.4 L29.0 21.3 L28.5 21.2 L28.0 21.2 L27.5 21.1 L26.9 21.1 L26.3 21.1 L25.7 21.1 L25.0 21.1 L24.4 21.1 L23.7 21.2 L23.0 21.2 L22.3 21.3 L21.6 21.4 L20.9 21.4 L20.2 21.5 L19.5 21.6 L18.8 21.6 L18.0 21.7 L17.3 21.8 L16.6 21.8 L15.9 21.9 L15.2 22.0 L14.4 22.0 L13.7 22.0 L13.0 22.0 L12.4 22.0 L11.7 22.0 L11.0 22.0 L10.3 22.0 L9.7 21.9 L9.1 21.8 L8.4 21.7 L7.8 21.5 L7.2 21.3 L6.7 21.1 L6.1 20.8 L5.6 20.5 L5.1 20.2 L4.6 19.8 L4.2 19.3 L3.9 18.9 L3.5 18.4 L3.3 17.8 L3.1 17.2 L2.9 16.7 L2.9 16.0 L2.8 15.4 L2.8 14.7 L2.8 14.0 L2.9 13.3 L3.0 12.5 L3.2 11.7 L3.4 10.8 L3.6 9.9 L3.9 8.9 L4.3 7.9Z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3s-7.5-4.5-7.5-10.2A4.2 4.2 0 0 1 12 7.8a4.2 4.2 0 0 1 7.5 2.3c0 5.7-7.5 10.2-7.5 10.2z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20c.8-4 3.7-6 7.2-6s6.4 2 7.2 6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5.5 12.5 4.2 4.2L18.5 8"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M10 5.5H6.5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V14M13.5 5.5h5v5M18.5 5.5 11 13"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8.5V6.5A2.5 2.5 0 0 1 6.5 4h2M15.5 4h2A2.5 2.5 0 0 1 20 6.5v2M20 15.5v2a2.5 2.5 0 0 1-2.5 2.5h-2M8.5 20h-2A2.5 2.5 0 0 1 4 17.5v-2M8 12h8"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 18.5v-13M6.5 11 12 5.5 17.5 11"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.3-5.4M19.5 4.5v4.2h-4.2"/></symbol>
+    <symbol id="i-fish" viewBox="0 0 24 24"><path d="M2.8 12c2.7-4.3 7.5-5.5 11.2-3.1 1.2.8 2.2 1.9 3 3.1-.8 1.2-1.8 2.3-3 3.1-3.7 2.4-8.5 1.2-11.2-3.1zM17 12l4.2-3.4v6.8z"/><circle cx="8" cy="11.2" r=".6" fill="currentColor"/></symbol>
+    <symbol id="i-meat" viewBox="0 0 24 24"><path d="M4 13.5C4 9 7.500 5 12.500 5c4.500 0 7.500 2.800 7.500 6.500 0 4.200-4 7.500-9 7.500-4 0-7-2.200-7-5.500z"/><circle cx="14.500" cy="11.500" r="2.500"/></symbol>
+    <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3.8 11.5h16.4c0 4.8-3.4 8-8.2 8s-8.2-3.2-8.2-8zM9 8.2c-1-1.1 1-1.7 0-3M13 8.2c-1-1.1 1-1.7 0-3M17 8.2c-1-1.1 1-1.7 0-3"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19C5 10.5 10 5 19.5 5 19.5 14 14.5 19 5 19zM5 19c3-4.2 6-6.7 9.5-8.5"/></symbol>
+    <symbol id="i-cheese" viewBox="0 0 24 24"><path d="M3 17.5V13l17.5-6.5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="9.5" cy="15" r="1.1"/><circle cx="15.5" cy="12.8" r="1.3"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m11 3.8 1.7 5 5 1.7-5 1.7-1.7 5-1.7-5-5-1.7 5-1.7zM19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
+    <symbol id="i-plate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.3"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><path d="M4.5 11.5h15v8a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1zM3.5 7.8h17v3.7h-17zM12 7.8v12.7M12 7.8C10.5 4 6.8 4.2 7.5 6.3c.4 1.1 2.5 1.5 4.5 1.5 2 0 4.1-.4 4.5-1.5.7-2.1-3-2.3-4.5 1.5z"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 3.5c.8 3.7 5.2 5.3 5.2 9.8a5.2 5.2 0 0 1-10.4 0c0-2.1 1-3.4 2.2-4.4.1 1.7.8 2.6 1.7 2.9C10.1 9.7 10.5 6.4 12 3.5z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <!-- ================= HJEM (Shazam: én stor knapp) ================= -->
+  <main id="screen-home" class="screen active" aria-labelledby="home-title">
+    <header class="topbar">
+      <button class="icon-btn" id="open-profile" type="button" aria-label="Profil"><svg class="ic"><use href="#i-user"/></svg></button>
+      <span class="wordmark" aria-hidden="true">Vinkelner</span>
+      <button class="icon-btn" id="open-favs" type="button" aria-label="Favoritter"><svg class="ic"><use href="#i-heart"/></svg><span class="badge" id="fav-badge" hidden>0</span></button>
+    </header>
+    <div class="home-main">
+      <div class="home-gus"><span class="ring"></span><span class="gav xl" id="home-g"></span></div>
+      <h1 class="display" id="home-title">Hei. Hva skal vi <em>finne</em> i dag?</h1>
+      <p class="lede">Gustav har sterke meninger og en eksepsjonell bart.</p>
+    </div>
+    <footer class="home-foot">
+      <button class="btn" id="orb" type="button"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg>Spør Gustav</button>
+      <button class="ghost" id="open-scan" type="button"><svg class="ic"><use href="#i-scan"/></svg>Pek på etiketten</button>
+    </footer>
+  </main>
+
+  <!-- ================= SAMTALE (v5: Gustav snakker, ett kort om gangen) ================= -->
+  <section id="screen-ask" class="screen" data-step="0" aria-label="Samtale med Gustav">
+    <header class="topbar">
+      <button class="icon-btn" id="ask-close" type="button" aria-label="Avbryt"><svg class="ic"><use href="#i-close"/></svg></button>
+      <div class="steps" id="steps" role="progressbar" aria-label="Fremdrift" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0"><i></i><i></i><i></i></div>
+      <button class="txt-btn" id="ask-skip" type="button">Vis meg vin</button>
+    </header>
+    <div class="ask-gus" id="ask-gus"><div class="blob" id="ask-blob"><span id="ask-g" class="g-wrap"></span></div></div>
+    <div class="say" id="say"><p class="say-t" id="say-t" aria-hidden="true"></p></div>
+    <p class="sr" id="say-live" role="status" aria-live="polite"></p>
+    <div class="ask-body" id="ask-body"></div>
+    <form class="composer" id="composer" autocomplete="off">
+      <input id="q" type="text" inputmode="text" enterkeyhint="send" placeholder="Eller skriv selv …" aria-label="Skriv til Gustav">
+      <button class="send" type="submit" aria-label="Send"><svg class="ic"><use href="#i-up"/></svg></button>
+    </form>
+  </section>
+
+  <!-- ================= LASTER: Gustav lufter vinen ================= -->
+  <section id="screen-loading" class="screen center" aria-live="polite" aria-label="Gustav tenker">
+    <div class="decant" id="decant" aria-hidden="true"></div>
+    <h2 class="title">Gustav lufter vinen</h2>
+    <p class="sub" id="loading-sub"></p>
+  </section>
+
+  <!-- ================= RESULTAT (OpenTable) ================= -->
+  <section id="screen-results" class="screen" aria-labelledby="res-title">
+    <header class="topbar">
+      <button class="icon-btn" id="res-back" type="button" aria-label="Nytt spørsmål"><svg class="ic"><use href="#i-back"/></svg></button>
+      <span class="wordmark" aria-hidden="true">Gustavs utvalg</span>
+      <button class="icon-btn" id="res-favs" type="button" aria-label="Favoritter"><svg class="ic"><use href="#i-heart"/></svg><span class="badge" data-badge hidden>0</span></button>
+    </header>
+    <div class="scroll" id="res-scroll">
+      <div class="gline"><span class="gav" id="res-gav"></span><p class="bubble" id="res-intro"></p></div>
+      <div class="heard" id="res-heard"></div>
+      <div id="cards"></div>
+      <div class="more-wrap"><button class="btn secondary" id="more" type="button"><svg class="ic"><use href="#i-refresh"/></svg>Andre forslag</button></div>
+    </div>
+  </section>
+
+  <!-- ================= FAVORITTER ================= -->
+  <section id="screen-favs" class="screen" aria-labelledby="favs-title">
+    <header class="topbar">
+      <button class="icon-btn" data-back type="button" aria-label="Tilbake"><svg class="ic"><use href="#i-back"/></svg></button>
+      <span class="wordmark" aria-hidden="true">Favoritter</span><span class="icon-spacer"></span>
+    </header>
+    <div class="scroll" id="favs-scroll">
+      <h1 class="display sm" id="favs-title">Favoritter</h1>
+      <div id="fav-list"></div>
+    </div>
+  </section>
+
+  <!-- ================= PROFIL ================= -->
+  <section id="screen-profile" class="screen" aria-labelledby="profile-title">
+    <header class="topbar">
+      <button class="icon-btn" data-back type="button" aria-label="Tilbake"><svg class="ic"><use href="#i-back"/></svg></button>
+      <span class="wordmark" aria-hidden="true">Profil</span><span class="icon-spacer"></span>
+    </header>
+    <div class="scroll" id="profile-scroll">
+      <div class="profile-hero"><div class="pg" id="profile-g"></div><h1 class="display sm" id="profile-title">Din smak</h1><p class="quote" id="profile-summary"></p></div>
+      <div class="group" id="profile-list"></div>
+      <div class="group actions">
+        <button class="line-btn" id="redo" type="button">Oppdater smaksprofil<svg class="ic"><use href="#i-back" transform="translate(24 0) scale(-1 1)"/></svg></button>
+        <button class="line-btn danger" id="clear-favs" type="button">Fjern alle favoritter</button>
+      </div>
+      <p class="proto-note"><strong>Prototype – eksempeldata</strong>Vinene, prisene og lagerstatusen i denne appen er fiktive eksempler og ikke hentet fra Vinmonopolet. «Se på Vinmonopolet» åpner bare et vanlig søk.</p>
+    </div>
+  </section>
+
+  <!-- ================= SKANN (stub) ================= -->
+  <section id="screen-scan" class="screen" aria-labelledby="scan-title">
+    <header class="topbar">
+      <button class="icon-btn" data-back type="button" aria-label="Tilbake"><svg class="ic"><use href="#i-back"/></svg></button>
+      <span class="wordmark" aria-hidden="true">Skann</span><span class="icon-spacer"></span>
+    </header>
+    <div class="scan-body">
+      <div class="viewfinder" aria-hidden="true"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i><div id="scan-g"></div></div>
+      <h1 class="display sm" id="scan-title">Pek på etiketten</h1>
+      <p class="sub" id="scan-msg">Snart kan Gustav lese etiketter. Foreløpig øver han foran speilet.</p>
+      <button class="btn" id="scan-btn" type="button">Prøv likevel</button>
+    </div>
+  </section>
+
+  <!-- ================= VINARK ================= -->
+  <div id="scrim" hidden></div>
+  <div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-name" hidden>
+    <div class="grab" id="grab" aria-hidden="true"><i></i></div>
+    <button class="icon-btn sheet-close" id="sheet-close" type="button" aria-label="Lukk"><svg class="ic"><use href="#i-close"/></svg></button>
+    <div class="sheet-body" id="sheet-body"></div>
+    <div class="sheet-bar" id="sheet-bar"></div>
+  </div>
+
+  <!-- ================= ONBOARDING (Duolingo) ================= -->
+  <section id="onboarding" class="screen" role="dialog" aria-modal="true" aria-label="Smaksprofil" hidden>
+    <div id="ob-welcome" class="ob-pane">
+      <div class="ob-hero"><div class="gav xl" id="ob-hero-g"></div></div>
+      <h1 class="display">Hei, jeg er <em>Gustav</em>.</h1>
+      <p class="sub">Din private vinkelner. Fem raske spørsmål, så treffer jeg bedre. Ingen gale svar – bare gale meninger, og de er mine.</p>
+      <div class="ob-cta"><button class="btn" id="ob-start" type="button">Sett i gang</button><button class="txt-btn" id="ob-skip" type="button">Hopp over</button></div>
+    </div>
+    <div id="ob-quiz" class="ob-pane" hidden>
+      <header class="ob-top">
+        <button class="icon-btn" id="ob-back" type="button" aria-label="Tilbake"><svg class="ic"><use href="#i-back"/></svg></button>
+        <div class="progress" id="ob-progress" role="progressbar" aria-valuemin="0" aria-valuemax="5"><i></i></div>
+        <button class="icon-btn" id="ob-close" type="button" aria-label="Lukk"><svg class="ic"><use href="#i-close"/></svg></button>
+      </header>
+      <div class="ob-say"><span class="gav lg" id="ob-g"></span><div class="bubble tail"><p class="step-no" id="ob-step"></p><p class="q" id="ob-q"></p></div></div>
+      <div class="ob-options" id="ob-options"></div>
+    </div>
+    <div id="ob-done" class="ob-pane" hidden>
+      <div class="ob-hero"><div class="gav xl" id="ob-done-g"></div></div>
+      <h1 class="display">Smaksprofilen er <em>klar</em>.</h1>
+      <p class="quote" id="ob-done-line">«Nå kjenner jeg deg nesten like godt som barten min.»</p>
+      <div class="ob-cta"><button class="btn" id="ob-finish" type="button">Finn din første vin</button></div>
+    </div>
+  </section>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="fx" aria-hidden="true"></div>
+</div>
+
+<script src="wines.js"></script>
+<script src="engine.js"></script>
+<script src="gustav.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
