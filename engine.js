@@ -19,7 +19,7 @@ const FOOD=[
  [/sushi|sashimi|poke/,["sushi","fisk"],"sushi"],
  [/biff|entrec|steak|indrefilet|oksekjøtt|burger|hamburger|ribeye|kjøttdeig/,["biff","kjott"],"biff"],
  [/kjøtt|kjott|kjøttkake|lapskaus/,["kjott"],"kjøtt"],
- [/\blam\b|lamme|fårikål/,["lam","kjott"],"lam"],
+ [/påskelam|\blam\b|lamme|fårikål/,["lam","kjott"],"lam"],
  [/vilt|elg|hjort|rein|rådyr|\bhare\b/,["vilt","kjott"],"vilt"],
  [/gryte|stek|stuing|bolognese|ragu|chili/,["gryte","kjott"],"gryte"],
  [/svin|ribbe|pinnekjøtt|kotelett|bacon|pølse|skinke|pulled/,["svin","kjott"],"svin"],
@@ -29,7 +29,7 @@ const FOOD=[
  [/\bost\b|osten|oster|ostefat|brie|chèvre|parmesan|raclette|fondue/,["ost"],"ost"],
  [/taco|tex-?mex|fajita|burrito|nachos|enchilada/,["taco"],"taco"],
  [/dessert|kake|sjokolade|iskrem|søtt|søtsak|pai\b|karamell/,["dessert"],"dessert"],
- [/\bfest\b|fest|bursdag|feiring|feire|nyttår|jubileum|konfirmasjon|bryllup|skål|champagne|selskap|forlovelse|jul\b/,["fest"],"fest"],
+ [/\bfest\b|bursdag|feiring|\bfeire\b|nyttår|jubileum|konfirmasjon|bryllup|\bskål\b|champagne|selskap|forlov|jule|\bjul\b|\bpåske\b/,["fest"],"fest"],
  [/grill|bbq|grillet|grillmat|kullgrill/,["grill"],"grill"],
  [/tapas|småretter|pintxos/,["tapas"],"tapas"],
  [/vegetar|vegansk|salat|grønnsak|falafel|hummus/,["vegetar"],"vegetar"],
@@ -37,6 +37,25 @@ const FOOD=[
  [/aperitiff|før maten|terrasse|solnedgang|sommer|piknik|forrett/,["aperitiff"],"aperitiff"],
  [/sopp|trøffel/,["sopp"],"sopp"]
 ];
+/* Anledninger. Rekkefølgen er prioritet: «svigers på lørdag» er svigers, ikke hverdag.
+   «grillet» er tilberedning (FOOD over) og skal ikke telle som grill-anledning. */
+const OCCASIONS=[
+ {id:"svigers",re:/sviger/,label:"Svigers",tags:["fest"],word:"svigers"},
+ {id:"date",re:/\bdate\b|romantisk|kjæreste|hyggelig for to/,label:"Date",tags:["fest","aperitiff"],word:"date"},
+ {id:"bursdag",re:/bursdag/,label:"Bursdag",tags:["fest"],word:"bursdag"},
+ {id:"jul",re:/\bjul\b|jule|jula\b/,label:"Jul",tags:["fest"],word:"jul"},
+ {id:"paske",re:/påske/,label:"Påske",tags:["fest"],word:"påske"},
+ {id:"hytte",re:/hytte/,label:"Hytte",tags:[],word:"hytte"},
+ {id:"feiring",re:/forlov|bryllup|jubileum|konfirmasjon|nyttår|feiring|\bfeire\b|\bskål\b/,label:"Feiring",tags:["fest"],word:"feiring"},
+ {id:"middag",re:/middagsselskap|middag med|selskap|\bgjester\b/,label:"Middagsselskap",tags:["fest"],word:"middag"},
+ {id:"gave",re:/\bgave\b|presang|vertinne|vertskap/,label:"Gave",tags:["fest"],word:"gave"},
+ {id:"grill",re:/bbq|grillfest|grilling|på grillen|\bgrill\b/,label:"Grill",tags:["grill"],word:"grill"},
+ {id:"fest",re:/\bfest\b|festlig/,label:"Fest",tags:["fest"],word:"fest"},
+ {id:"hverdag",re:/hverdag|ukedag|mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag/,label:"Hverdag",tags:[],word:"hverdag"}
+];
+const DISH_ORDER=["laks","torsk","skalldyr","sushi","biff","lam","vilt","svin","kylling","pizza","pasta","taco","dessert","ost","tapas","asiatisk","sopp","aperitiff","vegetar","gryte","fisk","kjøtt"];
+const DISH_LABEL={laks:"Laks",torsk:"Torsk",skalldyr:"Skalldyr",sushi:"Sushi",biff:"Biff",lam:"Lam",vilt:"Vilt",svin:"Svin",kylling:"Kylling",pizza:"Pizza",pasta:"Pasta",taco:"Taco",dessert:"Dessert",ost:"Ost",tapas:"Tapas",asiatisk:"Asiatisk",sopp:"Sopp",aperitiff:"Aperitiff",vegetar:"Vegetar",gryte:"Gryte",fisk:"Fisk",kjøtt:"Kjøtt"};
+const DAYS=/mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag/;
 const TYPES=[
  [/rødvin|rød vin|\brød\b|\brøde\b/,"R"],[/hvitvin|hvit vin|\bhvit\b|\bhvite\b/,"H"],
  [/rosé|rosevin|\brose\b/,"P"],[/bobler|musserende|champagne|cava|prosecco|crémant|cremant|boblevin|sekt/,"S"]
@@ -45,7 +64,7 @@ const COUNTRY=[[/frankrike|fransk/,"Frankrike"],[/italia|italiensk/,"Italia"],[/
 
 function parse(text,chips){
   const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";
-  const p={tags:new Set(),types:new Set(),max:null,target:null,min:null,words:[],sweet:null,body:null,countries:[],grapeHit:[],raw:text||""};
+  const p={tags:new Set(),types:new Set(),max:null,target:null,min:null,words:[],sweet:null,body:null,countries:[],grapeHit:[],raw:text||"",budgetAny:false,budgetLabel:null};
   FOOD.forEach(([re,tags,word])=>{if(re.test(t)){tags.forEach(x=>p.tags.add(x));p.words.push(word)}});
   TYPES.forEach(([re,ty])=>{if(re.test(t))p.types.add(ty)});
   COUNTRY.forEach(([re,c])=>{if(re.test(t))p.countries.push(c)});
@@ -55,8 +74,15 @@ function parse(text,chips){
   else if((m=t.match(/(?:rundt|ca\.?|cirka|omtrent|ca|på)\s*(\d{2,4})/)))p.target=+m[1];
   else if((m=t.match(/(\d{2,4})\s*(?:kr|,-|kroner|lapper|nok)/)))p.target=+m[1];
   else if((m=t.match(/(?:til|for)\s*(\d{2,4})\b/)))p.max=+m[1];
-  if(/billig|rimelig|økonomisk|spar/.test(t)&&p.max==null&&p.target==null)p.max=140;
-  if(/dyr|luksus|spesiell|flott|eksklusiv/.test(t)&&p.max==null&&p.target==null)p.min=350;
+  if(p.max==null&&p.target==null&&p.min==null){
+    if(/billig|rimelig|økonomisk|spar/.test(t)){p.max=140;p.budgetLabel="Billig"}
+    else if(/litt dyrere|et hakk dyrere|ikke den billigste|\bdyrere\b/.test(t)){p.target=280;p.budgetLabel="Litt dyrere"}
+    else if(/\b(dyr|luksus|spesiell|flott|eksklusiv)\b/.test(t))p.min=350;
+    else if(/spiller ingen rolle|ingen rolle|helt likegyldig|uten budsjett|uansett pris|ingen grense/.test(t))p.budgetAny=true;
+  }
+  if(p.max!=null&&!p.budgetLabel)p.budgetLabel="Under "+p.max+" kr";
+  if(p.target!=null&&!p.budgetLabel)p.budgetLabel="Rundt "+p.target+" kr";
+  if(p.min!=null&&!p.budgetLabel)p.budgetLabel="Fra "+p.min+" kr";
   if(/gave|presang|vertinne|vertskap/.test(t)){p.min=p.min||250;p.tags.add("fest");p.words.push("gave")}
   // stemning
   if(/kraftig|fyldig|tung|mørk/.test(t))p.body=4.5;
@@ -66,6 +92,11 @@ function parse(text,chips){
   if(/\bsøt/.test(t)&&!p.tags.has("dessert")){p.sweet=3}
   if(/romantisk|date|hyggelig for to|kjæreste/.test(t)){p.tags.add("fest");p.tags.add("aperitiff");p.words.push("romantikk")}
   if(/koselig|hygge|sofa|vinterkveld|peis/.test(t)&&p.body==null)p.body=4;
+  OCCASIONS.forEach(o=>{
+    if(!o.re.test(t))return;
+    o.tags.forEach(x=>p.tags.add(x));
+    if(o.word&&!p.words.includes(o.word))p.words.push(o.word);
+  });
   // chips
   chips.forEach(id=>{const c=CHIPS.find(x=>x.id===id);if(!c)return;
     (c.types||[]).forEach(x=>p.types.add(x));(c.tags||[]).forEach(x=>p.tags.add(x));
@@ -74,7 +105,63 @@ function parse(text,chips){
 }
 function typeWord(p){return [...p.types].map(x=>({R:"rødvin",H:"hvitvin",P:"rosé",S:"bobler"}[x])).join(" eller ")}
 function budgetWord(p){
+  if(p.budgetAny)return "";
+  if(p.budgetLabel==="Billig"||p.budgetLabel==="Litt dyrere")return p.budgetLabel.toLowerCase();
   if(p.max)return "under "+p.max+" kr"; if(p.target)return "rundt "+p.target+" kr"; if(p.min)return "fra "+p.min+" kr"; return "";
+}
+function dishOf(p,text){
+  const have=new Set(p.words),t=(text||"").toLowerCase();
+  if(have.has("pizza")&&have.has("pasta"))return {id:"pasta",label:"Pasta og pizza",query:"pasta pizza"};
+  if(have.has("ost")&&have.has("tapas"))return {id:"ost",label:"Ost og tapas",query:"ost tapas"};
+  for(const id of DISH_ORDER){
+    if(!have.has(id))continue;
+    let label=DISH_LABEL[id];
+    if(id==="skalldyr"&&/reker/.test(t))label="Reker";
+    else if(id==="laks"&&/ørret/.test(t))label="Ørret";
+    return {id,label,query:id};
+  }
+  return null;
+}
+function occasionOf(text){
+  const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";
+  for(const o of OCCASIONS){
+    if(!o.re.test(t))continue;
+    let label=o.label;
+    if(o.id==="hverdag"){const d=t.match(DAYS);if(d)label=d[0].charAt(0).toUpperCase()+d[0].slice(1)}
+    return {id:o.id,label,word:o.word,query:o.word};
+  }
+  return null;
+}
+function budgetOf(p){
+  if(p.budgetAny)return {any:true,label:"Spiller ingen rolle",part:""};
+  if(p.max==null&&p.target==null&&p.min==null)return null;
+  const part=p.target!=null?"rundt "+p.target+" kr":p.max!=null?"under "+p.max+" kr":"fra "+p.min+" kr";
+  return {any:false,label:p.budgetLabel||budgetWord(p),part,max:p.max,target:p.target,min:p.min};
+}
+function typeOf(p){
+  if(!p.types.size)return null;
+  const map={R:"Rødvin",H:"Hvitvin",P:"Rosé",S:"Bobler"};
+  const ids=[...p.types];
+  return {ids,label:ids.map(x=>map[x]).join(" eller "),query:ids.map(x=>map[x].toLowerCase()).join(" ")};
+}
+function moodOf(p,text){
+  const t=(text||"").toLowerCase(),out=[];
+  if(p.body!=null&&p.body<=2){
+    const both=/\blett\b/.test(t)&&/frisk/.test(t);
+    out.push({id:"lett",label:both?"Lett og frisk":/frisk/.test(t)&&!/\blett\b/.test(t)?"Frisk":"Lett"});
+  }else if(p.body!=null&&p.body>=4)out.push({id:"fyldig",label:/koselig|hygge|peis/.test(t)?"Koselig":"Fyldig"});
+  if(p.sweet===0)out.push({id:"torr",label:"Tørr"});
+  else if(p.sweet===2)out.push({id:"halv",label:"Halvtørr"});
+  else if(p.sweet!=null&&p.sweet>=3)out.push({id:"sot",label:"Søt"});
+  return out;
+}
+function methodOf(text){
+  return /grillet|grillmat|kullgrill/.test((text||"").toLowerCase())?{id:"grill",label:"Grillet"}:null;
+}
+/* Hva fri tekst allerede har svart på. Samtalen spør bare om resten. */
+function understand(text){
+  const p=parse(text,[]);
+  return {raw:text||"",p,dish:dishOf(p,text),occasion:occasionOf(text),budget:budgetOf(p),type:typeOf(p),mood:moodOf(p,text),method:methodOf(text)};
 }
 
 /* ---------- Rangering ---------- */
@@ -134,5 +221,5 @@ function recommend(p,prof,seedKey,exclude){
 }
 
 
-window.VKE={CHIPS,parse,recommend,score,hash,typeWord,budgetWord};
+window.VKE={CHIPS,parse,recommend,score,hash,typeWord,budgetWord,understand};
 })();

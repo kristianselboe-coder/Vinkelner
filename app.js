@@ -93,7 +93,88 @@ const DISH={
  asiatisk:["Asiatisk. Litt syre og kanskje litt søtt.","yum"],aperitiff:["Aperitiff. Gustav er allerede i sommerhumør.","wink"],sopp:["Sopp. Jord, smør og umami.","yum"]
 };
 const GENERIC=[["Spennende. Gustav noterer.","wink"],["Hm. Den kan Gustav jobbe med.","sly"],["Det høres godt ut.","yum"]];
-let step=0, answers=[], chatToken=0, busy=false, sayTk=0, dialIdx=2, dialTouched=false;
+let step=0, chatToken=0, busy=false, sayTk=0, dialIdx=2, dialTouched=false;
+let known=null, hist=[];
+function blankKnown(){return {dish:null,occasion:null,budget:null,type:null,mood:null,method:null,notes:[]}}
+function cloneKnown(k){return {dish:k.dish,occasion:k.occasion,budget:k.budget,type:k.type,mood:k.mood,method:k.method,notes:k.notes.slice()}}
+const filledCount=()=>(known.dish?1:0)+(known.occasion?1:0)+(known.budget?1:0);
+function nextStep(){if(!known.dish)return 0;if(!known.occasion)return 1;if(!known.budget)return 2;return -1}
+function mergeUnderstand(text){
+  const u=window.VKE.understand(text);
+  if(u.dish)known.dish=u.dish;
+  if(u.occasion)known.occasion=u.occasion;
+  if(u.budget)known.budget=u.budget;
+  if(u.type)known.type=u.type;
+  if(u.mood&&u.mood.length)known.mood=u.mood;
+  if(u.method)known.method=u.method;
+  if(text)known.notes.push(text);
+  return u;
+}
+function occasionPhrase(o){
+  const lab=o.label.toLowerCase();
+  if(o.id==="hverdag")return lab==="hverdag"?"til hverdags":"på "+lab;
+  return {svigers:"til svigers",date:"på date",feiring:"til feiringen",bursdag:"til bursdag",middag:"til selskapet",jul:"til jul",paske:"til påske",hytte:"på hytta",grill:"på grillen",fest:"til fest",gave:"i gave"}[o.id]||("til "+lab);
+}
+function understoodPhrase(u){
+  const raw=(u.raw||"").toLowerCase();
+  if(/forlov/.test(raw)&&!u.dish&&!u.budget&&!u.type)return "Forlovelse";
+  const bits=[];
+  if(u.dish){let d=u.dish.label.toLowerCase();if(u.method&&u.method.id==="grill")d="grillet "+d;bits.push(d)}
+  if(u.type)bits.push(u.type.label.toLowerCase());
+  if(u.mood&&u.mood.length)bits.push(u.mood.map(m=>m.label.toLowerCase()).join(" og "));
+  let s=bits.join(", ");
+  if(u.occasion)s=s?s+" "+occasionPhrase(u.occasion):u.occasion.label;
+  if(u.budget&&!u.budget.any)s=s?s+", "+u.budget.label.toLowerCase():u.budget.label;
+  return s?s.charAt(0).toUpperCase()+s.slice(1):"";
+}
+function acknowledge(u,done){
+  const onlyDish=u.dish&&!u.occasion&&!u.budget&&!u.type&&!(u.mood&&u.mood.length);
+  if(onlyDish&&DISH[u.dish.id])return DISH[u.dish.id];
+  const phrase=understoodPhrase(u);
+  if(!phrase)return GENERIC[hash(u.raw||"")%GENERIC.length];
+  const raw=(u.raw||"").toLowerCase();
+  let tail,mood;
+  if(u.occasion&&u.occasion.id==="svigers"){tail="Gustav oppfører seg.";mood="wink"}
+  else if(/forlov/.test(raw)){tail="Gratulerer. Gustav later som han ikke blir rørt.";mood="sly"}
+  else if(u.occasion&&u.occasion.id==="feiring"){tail="Gustav tar frem det fine glasset.";mood="surprised"}
+  else if(u.occasion&&u.occasion.id==="date"){tail="Gustav har ikke sett noe.";mood="sly"}
+  else if(u.dish&&u.dish.id==="pizza"&&u.occasion&&u.occasion.id==="hverdag"){tail="Klassisk. Gustav nikker.";mood="yum"}
+  else if(u.occasion&&u.occasion.id==="hverdag"){tail="Hverdager fortjener også en flaske.";mood="wink"}
+  else if(u.budget&&u.budget.any&&done){tail="Prisen får være. Gustav finner ut av det.";mood="wink"}
+  else if(done){tail="Da spør Gustav ikke mer.";mood="yum"}
+  else if(u.dish){tail="Gustav noterer.";mood="yum"}
+  else {tail="Notert.";mood="wink"}
+  return [phrase+". "+tail,mood];
+}
+const DISH_CHIPS={
+  "fisk":{id:"fisk",label:"Fisk",query:"fisk"},
+  "kjøtt":{id:"kjøtt",label:"Kjøtt",query:"kjøtt"},
+  "pasta pizza":{id:"pasta",label:"Pasta og pizza",query:"pasta pizza"},
+  "vegetar":{id:"vegetar",label:"Vegetar",query:"vegetar"},
+  "ost tapas":{id:"ost",label:"Ost og tapas",query:"ost tapas"},
+  "":{id:"none",label:"",query:""}
+};
+const OCC_CHIPS={
+  "":{id:"hverdag",label:"Hverdag",query:"hverdag"},
+  "fest":{id:"middag",label:"Middagsselskap",query:"fest gjester middagsselskap"},
+  "romantisk date":{id:"date",label:"Date",query:"romantisk date"},
+  "gave":{id:"gave",label:"Gave",query:"gave"},
+  "feiring":{id:"feiring",label:"Feiring",query:"feiring fest"}
+};
+function applyChoice(i,opt){
+  if(i===0){
+    known.dish=DISH_CHIPS[opt[1]]||{id:"annet",label:opt[0],query:opt[1]};
+    if(known.dish.query)known.notes.push(known.dish.query);
+  }else if(i===1){
+    known.occasion=OCC_CHIPS[opt[1]]||{id:"annet",label:opt[0],query:opt[1]};
+    if(known.occasion.query)known.notes.push(known.occasion.query);
+  }
+}
+function searchText(){
+  const parts=known.notes.filter(Boolean);
+  if(known.budget&&known.budget.part)parts.push(known.budget.part);
+  return parts.join(", ");
+}
 const askScr=$("#screen-ask"), body=$("#ask-body"), sayBox=$("#say"), sayT=$("#say-t");
 const setMood=m=>{$("#ask-g").innerHTML=gustav(m)};
 function hop(cls="hop"){const g=$("#ask-gus");g.classList.remove("hop","shake");void g.offsetWidth;if(!reduce)g.classList.add(cls)}
@@ -117,7 +198,7 @@ function setProgress(n){
   $("#steps").setAttribute("aria-valuenow",n);
 }
 function setCloseIcon(){
-  const back=step>0;$("#ask-close").setAttribute("aria-label",back?"Tilbake":"Avbryt");
+  const back=hist.length>0;$("#ask-close").setAttribute("aria-label",back?"Tilbake":"Avbryt");
   $("#ask-close").innerHTML=`<svg class="ic"><use href="#i-${back?"back":"close"}"/></svg>`;
 }
 function swapCard(el,dir){
@@ -136,7 +217,8 @@ function dialHTML(){
   return `<div class="dial"><div class="dial-cap" id="dial-cap"></div><div class="dial-num" id="dial-num"></div>
     <div class="range-wrap"><input id="dial" type="range" min="0" max="${STOPS.length-1}" step="1" value="${dialIdx}" aria-label="Budsjett per flaske"></div>
     <div class="ticks" aria-hidden="true">${labs}</div>
-    <button class="btn" id="dial-ok" type="button">Det passer</button></div>`;
+    <button class="btn" id="dial-ok" type="button">Det passer</button>
+    <button class="txt-btn" id="dial-any" type="button">Spiller ingen rolle</button></div>`;
 }
 function paintDial(quiet){
   const x=STOPS[dialIdx],d=$("#dial");
@@ -148,7 +230,7 @@ function paintDial(quiet){
 }
 async function showStep(i,dir="next"){
   const tk=chatToken,s=STEPS[i];step=i;busy=false;
-  askScr.dataset.step=i;setProgress(i);setCloseIcon();
+  askScr.dataset.step=i;setProgress(filledCount());setCloseIcon();
   $("#q").placeholder=s.ph;
   const el=document.createElement("div");el.className="qcard";
   el.innerHTML=s.budget?dialHTML():chipsHTML(s);
@@ -158,29 +240,36 @@ async function showStep(i,dir="next"){
   await sayText(s.say,false);if(tk!==chatToken)return;
 }
 async function startAsk(){
-  const tk=++chatToken;answers=[];busy=true;step=0;dialIdx=2;
+  const tk=++chatToken;known=blankKnown();hist=[];busy=true;step=0;dialIdx=2;
   body.innerHTML="";$("#q").value="";$("#composer").classList.remove("has");
   askScr.dataset.step=0;setProgress(0);setCloseIcon();setMood("hello");
   await sayText("Hei. Gustav her.",false);hop("shake");
   await wait(520);if(tk!==chatToken)return;
   showStep(0);
 }
-async function react(text,mood,tk){
+async function react(text,mood){
   setMood(mood);hop();
   await sayText(text,true);
 }
-async function nextOrRun(tk,delay=1000){
-  await wait(delay);if(tk!==chatToken)return;
+/* Går videre bare til spørsmål som fortsatt mangler. snap er tilstanden før siste svar. */
+async function afterReact(tk,snap){
+  await wait(reduce?40:720);if(tk!==chatToken)return;
   sayBox.classList.remove("react");
-  if(step<STEPS.length-1)showStep(step+1);else run(false,"");
+  const n=nextStep();
+  setProgress(n===-1?3:filledCount());
+  if(n===-1){run(false);return}
+  if(n!==step)hist.push(snap);
+  if(n===step){busy=false;await sayText(STEPS[step].say,false);return}
+  showStep(n);
 }
 body.addEventListener("click",async e=>{
   const b=e.target.closest(".chip");if(!b||busy)return;busy=true;
   const s=STEPS[step],o=s.opts[+b.dataset.i],tk=chatToken;
+  const snap={known:cloneKnown(known),step};
   b.classList.add("sel");b.parentElement.classList.add("picked");if(navigator.vibrate)navigator.vibrate(6);
-  answers[step]=o[1];setProgress(step+1);
-  await react(o[3],o[4],tk);if(tk!==chatToken)return;
-  nextOrRun(tk,reduce?0:650);
+  applyChoice(step,o);setProgress(filledCount());
+  await react(o[3],o[4]);if(tk!==chatToken)return;
+  afterReact(tk,snap);
 });
 body.addEventListener("input",e=>{
   if(e.target.id!=="dial")return;
@@ -189,31 +278,42 @@ body.addEventListener("input",e=>{
   sayText(x.say,true,true);
 });
 body.addEventListener("click",async e=>{
-  if(!e.target.closest("#dial-ok")||busy)return;busy=true;
-  const tk=chatToken,x=STOPS[dialIdx];answers[2]=x.part;setProgress(3);
-  await react(dialTouched?"Avtale. Nå lufter Gustav kjelleren.":x.say,x.mood,tk);if(tk!==chatToken)return;
-  nextOrRun(tk,reduce?0:650);
+  const any=e.target.closest("#dial-any");
+  const ok=e.target.closest("#dial-ok");
+  if((!any&&!ok)||busy)return;busy=true;
+  const tk=chatToken,x=STOPS[dialIdx];
+  const snap={known:cloneKnown(known),step};
+  if(any||x.v===0)known.budget={any:true,label:"Spiller ingen rolle",part:""};
+  else{known.budget={any:false,label:x.part.charAt(0).toUpperCase()+x.part.slice(1),part:x.part}}
+  setProgress(filledCount());
+  const line=any||x.v===0?(any?"Ingen grense. Gustav tar det som en tillitserklæring.":x.say):dialTouched?"Avtale. Nå lufter Gustav kjelleren.":x.say;
+  const mood=any?"wink":x.mood;
+  await react(line,mood);if(tk!==chatToken)return;
+  afterReact(tk,snap);
 });
 $("#q").addEventListener("input",e=>$("#composer").classList.toggle("has",!!e.target.value.trim()));
 $("#composer").addEventListener("submit",async e=>{
   e.preventDefault();const t=$("#q").value.trim();if(!t||busy)return;
   busy=true;const tk=chatToken;$("#q").value="";$("#composer").classList.remove("has");$("#q").blur();
-  const p=parse(t,[]),hasBudget=p.max!=null||p.target!=null||p.min!=null;
-  answers[step]=t;
-  const d=step===0&&DISH[p.words[0]]?DISH[p.words[0]]:GENERIC[hash(t)%GENERIC.length];
-  const done=hasBudget||step>=STEPS.length-1;
-  if(done)setProgress(3);else setProgress(step+1);
-  const b=body.querySelector(".chips");if(b)b.classList.add("picked");
-  await react(d[0],d[1],tk);if(tk!==chatToken)return;
-  await wait(reduce?0:850);if(tk!==chatToken)return;
-  if(done)run(false,"");else{sayBox.classList.remove("react");showStep(step+1)}
+  const snap={known:cloneKnown(known),step};
+  const u=mergeUnderstand(t);
+  const done=nextStep()===-1;
+  setProgress(done?3:filledCount());
+  if((step===0&&known.dish)||(step===1&&known.occasion)){const b=body.querySelector(".chips");if(b)b.classList.add("picked")}
+  const d=acknowledge(u,done);
+  await react(d[0],d[1]);if(tk!==chatToken)return;
+  afterReact(tk,snap);
 });
 $("#ask-close").addEventListener("click",()=>{
   chatToken++;sayTk++;
-  if(step>0){answers.length=step-1;showStep(step-1,"prev");return}
+  if(hist.length){const prev=hist.pop();known=cloneKnown(prev.known);showStep(prev.step,"prev");return}
   stack=[];go("home",false);
 });
-$("#ask-skip").addEventListener("click",()=>{chatToken++;sayTk++;run(false,$("#q").value.trim())});
+$("#ask-skip").addEventListener("click",()=>{
+  chatToken++;sayTk++;
+  const typed=$("#q").value.trim();if(typed)mergeUnderstand(typed);
+  run(false);
+});
 
 /* ---------- Kjør søk + «Gustav lufter vinen» ---------- */
 const LOADING=["Stryker barten og tenker","Konsulterer kjelleren i hodet","Lufter vinen. Og litt av egoet","Sjekker at flaskene sitter pent"];
@@ -223,11 +323,14 @@ function intro(p,empty,n){
   const bits=[...new Set(p.words)].join(",")+typeWord(p)+budgetWord(p);
   return `${heads[hash(bits)%heads.length]} Her er mine ${n} forslag.`;
 }
-function heardTokens(p){
+function heardTokens(){
   const t=[];
-  [...new Set(p.words)].forEach(w=>t.push(w[0].toUpperCase()+w.slice(1)));
-  const ty=typeWord(p);if(ty)t.push(ty[0].toUpperCase()+ty.slice(1));
-  const bw=budgetWord(p);if(bw)t.push(bw[0].toUpperCase()+bw.slice(1));
+  if(known.dish&&known.dish.label)t.push(known.dish.label);
+  if(known.method&&known.method.label&&!(known.occasion&&known.occasion.id==="grill"))t.push(known.method.label);
+  if(known.type&&known.type.label)t.push(known.type.label);
+  (known.mood||[]).forEach(m=>t.push(m.label));
+  if(known.occasion&&known.occasion.label)t.push(known.occasion.label);
+  if(known.budget&&!known.budget.any&&known.budget.label)t.push(known.budget.label);
   return t;
 }
 const DECANTER=`<svg class="dc" viewBox="0 0 160 200" aria-hidden="true">
@@ -237,11 +340,11 @@ const DECANTER=`<svg class="dc" viewBox="0 0 160 200" aria-hidden="true">
   <g class="cork"><rect x="68" y="8" width="24" height="16" rx="3"/></g>
 </svg>`;
 let loadIv;
-function run(more,typed){
+function run(more){
   let p,empty;
   if(!more){
-    const text=[...answers,typed].filter(Boolean).join(", ");
-    empty=!text;p=parse(text,[]);round=0;shown=[];lastQuery=text;lastP=p;lastEmpty=empty;
+    const text=searchText();
+    empty=!text.trim();p=parse(text,[]);round=0;shown=[];lastQuery=text;lastP=p;lastEmpty=empty;
   }else{p=lastP;empty=lastEmpty;round++}
   if(cur!=="loading")go("loading",false);
   const dc=$("#decant");dc.classList.remove("pop");dc.innerHTML=DECANTER;
@@ -253,7 +356,7 @@ function run(more,typed){
     clearInterval(loadIv);
     const picks=recommend(p,profile,lastQuery+round,shown);
     shown=shown.concat(picks.map(w=>w.id));
-    const tk=empty?[]:heardTokens(p);
+    const tk=empty?[]:heardTokens();
     $("#res-heard").innerHTML=tk.map(x=>`<span class="tk">${esc(x)}</span>`).join("");
     $("#res-gav").innerHTML=gustav(picks.length?"yum":"surprised");
     if(!picks.length){
