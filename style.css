@@ -171,6 +171,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--ac
 .ticks{align-self:stretch;display:flex;justify-content:space-between;padding:0 14px;font:400 12.5px/16px var(--sans);color:var(--ink-3);font-variant-numeric:tabular-nums}
 .ticks span{width:0;display:flex;justify-content:center;white-space:nowrap}
 .dial .btn{margin-top:28px}
+.dial .txt-btn{margin-top:4px}
 
 /* ================= LASTER ================= */
 .decant{position:relative;width:140px;height:176px;margin-bottom:32px}
