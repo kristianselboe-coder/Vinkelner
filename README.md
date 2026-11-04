@@ -1,6 +1,6 @@
 # Vinkelner – prototype v5
 
-Klikkbar mobilprototype. Ren HTML/CSS/JS, ingen bygging. **Alle viner, priser og lagerstatus er fiktive eksempeldata** (ikke fra Vinmonopolet).
+Klikkbar mobilprototype. Ren HTML/CSS/JS, ingen bygging. Når `data/wines.json` finnes, vises varedata fra Vinmonopolets åpne API. Ellers brukes fiktive eksempeldata i `wines.js`. Appen er ikke tilknyttet Vinmonopolet, og lagerstatus vises ikke.
 
 ## Kjør
     python3 -m http.server 8787   # i denne mappen
@@ -15,7 +15,8 @@ Klikkbar mobilprototype. Ren HTML/CSS/JS, ingen bygging. **Alle viner, priser og
 ## Filer
 - `index.html`, `style.css`, `app.js` – grensesnittet
 - `gustav.js` – maskoten (SVG fra enkle former)
-- `wines.js`, `engine.js` – eksempeldata og rangering (rosé-feil for dessert rettet i v4)
+- `wines.js`, `engine.js` – eksempeldata (reserve) og rangering
+- `scripts/fetch-wines.mjs` – nattlig henting til `data/wines.json`
 - `assets/fonts` – Geist + Instrument Serif (SIL OFL, lisens ligger ved)
 - `screens/` – skjermbilder 390 × 844
 

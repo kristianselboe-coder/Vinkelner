@@ -164,6 +164,82 @@ function understand(text){
   return {raw:text||"",p,dish:dishOf(p,text),occasion:occasionOf(text),budget:budgetOf(p),type:typeOf(p),mood:moodOf(p,text),method:methodOf(text)};
 }
 
+/* Matparing fra Vinmonopolet (foodDesc) → samme tagger som eksempeldataene. */
+const PAIR=[
+ [/laks|ørret|fet fisk|røkt fisk/,["laks","fisk"]],
+ [/torsk|skrei|\bsei\b|hyse|kveite|hvit fisk|mager fisk/,["torsk","fisk"]],
+ [/skalldyr|skaldyr|reker|skjell|østers|hummer|krabbe/,["skalldyr","fisk"]],
+ [/sushi|sashimi/,["sushi","fisk"]],
+ [/\bfisk\b/,["fisk"]],
+ [/storfe|\bokse\b|biff|entrec[oô]te|indrefilet/,["biff","kjott"]],
+ [/\blam\b|lammek/,["lam","kjott"]],
+ [/vilt|elg|hjort|rein|rådyr|småvilt|storvilt/,["vilt","kjott"]],
+ [/svin|ribbe|pinnekjøtt|kotelett/,["svin","kjott"]],
+ [/kylling|kalkun|fjærkre|fjærfe|\bfugl\b|\band\b|gås|mørk fugl|lyst fugl/,["kylling"]],
+ [/lyst kjøtt/,["kjott","kylling"]],
+ [/\bkjøtt\b|\bkjott\b/,["kjott"]],
+ [/pizza/,["pizza"]],
+ [/pasta|lasagne/,["pasta"]],
+ [/\bost\b|muggost|blåmugg/,["ost"]],
+ [/dessert|sjokolade|\bkake\b/,["dessert"]],
+ [/aperitiff|aperitif|forrett/,["aperitiff"]],
+ [/vegetar|grønnsak|salat|vegansk/,["vegetar"]],
+ [/grill|\bbbq\b/,["grill"]],
+ [/tapas|småretter|smårett/,["tapas"]],
+ [/sopp|trøffel/,["sopp"]],
+ [/asiatisk|krydret|karri|curry|thai|\bwok\b/,["asiatisk"]],
+ [/taco|tex-mex/,["taco"]],
+ [/gryterett|\bgryte\b|stuing/,["gryte","kjott"]]
+];
+function scale12(n,lo,hi){
+  if(n==null||!Number.isFinite(n))return null;
+  const t=Math.max(1,Math.min(12,n));
+  return Math.max(lo,Math.min(hi,Math.round(lo+(t-1)/11*(hi-lo))));
+}
+function typeCode(typeName,colour){
+  const t=(typeName||"").toLowerCase(),c=(colour||"").toLowerCase();
+  if(/musserende|perlende|champagne|cava|prosecco/.test(t))return "S";
+  if(/rosé|rose/.test(t)||/rosé|rose/.test(c))return "P";
+  if(/rød/.test(t)||/\brød/.test(c))return "R";
+  if(/hvit/.test(t)||/gul|hvit|strå/.test(c))return "H";
+  if(/sterkvin|søt/.test(t))return /rød/.test(c)?"R":"H";
+  return null;
+}
+function tagsFrom(pairing,taste){
+  const text=(" "+(pairing||[]).concat(taste||[]).join(" ")+" ").toLowerCase();
+  const tags=[];
+  PAIR.forEach(([re,list])=>{if(re.test(text))list.forEach(t=>{if(!tags.includes(t))tags.push(t)})});
+  return tags;
+}
+/* Ett element fra data/wines.json → formen motoren scorer. Null hvis den ikke kan brukes. */
+function mapProduct(row){
+  if(!row||!(Number(row.price)>0)||!row.id||!row.name)return null;
+  const type=typeCode(row.type,row.colour);
+  if(!type)return null;
+  let body=scale12(row.fullness,1,5);
+  let sweet=scale12(row.sweetness,0,5);
+  if(body==null)body=type==="R"?3:2;
+  if(sweet==null)sweet=/søt|sterk/.test(String(row.type||"").toLowerCase())?4:type==="S"?1:0;
+  const tags=tagsFrom(row.pairing,row.taste);
+  if(sweet>=4&&!tags.includes("dessert"))tags.push("dessert");
+  const note=[row.taste,row.smell,row.colour].filter(Boolean).join(" ");
+  return {
+    id:String(row.id),name:row.name,producer:row.producer||"",type,
+    country:row.country||"",region:row.district||"",
+    grape:(row.grapes||[]).filter(Boolean).join(" / "),
+    body,sweet,price:Number(row.price),tags,note,
+    tip:(row.pairing||[]).filter(Boolean).join(", "),
+    quip:"",image:row.image||"",url:row.url||"",
+    volume:row.volume==null?null:Number(row.volume),
+    alcohol:row.alcohol==null?null:Number(row.alcohol),
+    live:true
+  };
+}
+function catalog(){
+  const live=typeof window!=="undefined"&&window.VK_WINES;
+  return live&&live.length?live:WINES;
+}
+
 /* ---------- Rangering ---------- */
 const COMMON=["Pinot noir","Merlot / Cabernet sauvignon","Cabernet sauvignon","Chardonnay","Sauvignon blanc","Pinot grigio","Sangiovese","Tempranillo","Riesling","Malbec","Shiraz","Glera"];
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -201,13 +277,13 @@ function score(w,p,prof,jit){
     if(prof.body!=null&&p.body==null)s-=Math.abs(w.body-prof.body)*0.8;
     if(prof.budget&&p.max==null&&p.target==null&&p.min==null){const [lo,hi]=prof.budget;
       if(pr>=lo&&pr<=hi)s+=1.5;else s-=Math.min(2.5,Math.abs(pr<lo?lo-pr:pr-hi)/100);}
-    if(prof.adv!=null){const common=COMMON.includes(w.grape);s+= prof.adv===0?(common?1:-.5):prof.adv===2?(common?-.8:1.2):0}
+    if(prof.adv!=null){const g=(w.grape||"").toLowerCase();const common=COMMON.some(c=>g.includes(c.toLowerCase()));s+= prof.adv===0?(common?1:-.5):prof.adv===2?(common?-.8:1.2):0}
   }
   return s+jit;
 }
 function recommend(p,prof,seedKey,exclude){
   const r=rnd(hash(seedKey));
-  let cand=WINES.filter(w=>!exclude.includes(w.id)).map(w=>({w,s:score(w,p,prof,r()*1.4)}));
+  let cand=catalog().filter(w=>!exclude.includes(w.id)).map(w=>({w,s:score(w,p,prof,r()*1.4)}));
   const picks=[];
   while(picks.length<4&&cand.length){
     cand.forEach(c=>{c.adj=c.s-(p.types.size===1?1.2:5.5)*picks.filter(x=>x.w.type===c.w.type).length});
@@ -221,5 +297,5 @@ function recommend(p,prof,seedKey,exclude){
 }
 
 
-window.VKE={CHIPS,parse,recommend,score,hash,typeWord,budgetWord,understand};
+window.VKE={CHIPS,parse,recommend,score,hash,typeWord,budgetWord,understand,mapProduct};
 })();

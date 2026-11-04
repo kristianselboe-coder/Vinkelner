@@ -1,4 +1,4 @@
-// EKSEMPELDATA – fiktive produkter, priser og lagerstatus. Ikke ekte Vinmonopolet-data.
+// EKSEMPELDATA – reserve når data/wines.json mangler eller ikke kan lastes. Fiktive produkter.
 // [navn, type(R/H/S/P), land, region, drue, kropp 1-5, sødme 0-5, pris NOK, tags, smaksnotat, matparing, Gustavs kommentar]
 const RAW = [
 // ---------- RØDVIN ----------

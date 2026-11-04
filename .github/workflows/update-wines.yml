@@ -1,0 +1,39 @@
+name: Update wines
+
+on:
+  schedule:
+    # 02:00 UTC. Det er 03:00 i Oslo om vinteren (CET) og 04:00 om sommeren (CEST).
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-wines
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Fetch Vinmonopolet wines
+        run: node scripts/fetch-wines.mjs
+        env:
+          VINMONOPOLET_API_KEY: ${{ secrets.VINMONOPOLET_API_KEY }}
+
+      - name: Commit data/wines.json if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- data/wines.json
+          if git diff --cached --quiet; then
+            echo "data/wines.json er uendret."
+          else
+            git commit -m "Update Vinmonopolet wine data"
+            git push
+          fi
