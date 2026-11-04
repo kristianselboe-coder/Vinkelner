@@ -14,7 +14,11 @@ let lastQuery="", shown=[], round=0, lastP=null, lastEmpty=false;
 
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ic=(n,cls="")=>`<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
-const wineById=id=>WINES.find(w=>w.id===id);
+function wineById(id){
+  const live=window.VK_WINES;
+  if(live){const w=live.find(x=>x.id===id);if(w)return w}
+  return WINES.find(w=>w.id===id);
+}
 const bodyL=b=>b<=1?"Lett":b<=2?"Lett til medium":b==3?"Medium":b==4?"Fyldig":"Kraftig";
 const sweetL=s=>s<=1?"Tørr":s==2?"Halvtørr":s==3?"Medium søt":"Søt";
 const gav=(m,c="")=>`<span class="gav ${c}">${gustav(m)}</span>`;
@@ -50,8 +54,8 @@ function go(name,push=true){
 function back(){const p=stack.pop()||"home";go(p,false)}
 $$("[data-back]").forEach(b=>b.addEventListener("click",back));
 $("#open-profile").addEventListener("click",()=>{renderProfile();go("profile")});
-$("#open-favs").addEventListener("click",()=>{renderFavs();go("favs")});
-$("#res-favs").addEventListener("click",()=>{renderFavs();go("favs")});
+$("#open-favs").addEventListener("click",async()=>{await renderFavs();go("favs")});
+$("#res-favs").addEventListener("click",async()=>{await renderFavs();go("favs")});
 $("#open-scan").addEventListener("click",()=>go("scan"));
 $("#home-g").innerHTML=gustav("hello");
 $("#orb").addEventListener("click",()=>{go("ask");startAsk()});
@@ -317,8 +321,10 @@ $("#ask-skip").addEventListener("click",()=>{
 
 /* ---------- Kjør søk + «Gustav lufter vinen» ---------- */
 const LOADING=["Stryker barten og tenker","Konsulterer kjelleren i hodet","Lufter vinen. Og litt av egoet","Sjekker at flaskene sitter pent"];
+function usingLive(){return !!(window.VK_WINES&&window.VK_WINES.length)}
 function intro(p,empty,n){
-  if(empty)return "Du ga meg ingenting å jobbe med, så jeg gikk på magefølelsen og smaksprofilen din. Gustav har sjelden feil.";
+  if(empty&&!usingLive())return "Du ga meg ingenting å jobbe med, så jeg gikk på magefølelsen og smaksprofilen din. Gustav har sjelden feil.";
+  if(usingLive())return n+" treff ut fra det du beskrev.";
   const heads=["Utmerket valg.","Aha, en kjenner.","Mmm. Gustav liker dette.","Dette kan jeg."];
   const bits=[...new Set(p.words)].join(",")+typeWord(p)+budgetWord(p);
   return `${heads[hash(bits)%heads.length]} Her er mine ${n} forslag.`;
@@ -340,7 +346,8 @@ const DECANTER=`<svg class="dc" viewBox="0 0 160 200" aria-hidden="true">
   <g class="cork"><rect x="68" y="8" width="24" height="16" rx="3"/></g>
 </svg>`;
 let loadIv;
-function run(more){
+async function run(more){
+  await catalogReady;
   let p,empty;
   if(!more){
     const text=searchText();
@@ -366,7 +373,7 @@ function run(more){
       $("#more").hidden=true;
     }else{
       $("#more").hidden=false;
-      $("#res-intro").textContent=more?"Åh, du vil ha mer? Gustav elsker engasjement. Prøv disse:":intro(p,empty,picks.length);
+      $("#res-intro").textContent=more?(usingLive()?"Flere treff ut fra det samme.":"Åh, du vil ha mer? Gustav elsker engasjement. Prøv disse:"):intro(p,empty,picks.length);
       $("#cards").innerHTML=picks.map((w,i)=>card(w,i)).join("");
     }
     stack=["home"];
@@ -378,25 +385,43 @@ $("#more").addEventListener("click",()=>run(true));
 
 /* ---------- Kort ---------- */
 function heartBtn(id,on){return `<button class="heart" type="button" data-id="${id}" aria-pressed="${on}" aria-label="${on?"Fjern fra favoritter":"Legg til i favoritter"}">${ic("heart")}</button>`}
-const vinUrl=w=>"https://www.vinmonopolet.no/search?q="+encodeURIComponent(w.name);
+const vinUrl=w=>w.url||("https://www.vinmonopolet.no/search?q="+encodeURIComponent(w.name));
+const vinLabel=w=>w.live?"Se hos Vinmonopolet":"Se på Vinmonopolet";
+function nok(n){
+  const r=Math.round(Number(n)*100)/100;
+  if(!Number.isFinite(r))return "";
+  return Number.isInteger(r)?String(r):String(r).replace(".",",");
+}
+function liveFacts(w){
+  const bits=[];
+  if(typeof w.volume==="number"&&w.volume>0&&w.volume<=5)bits.push(Math.round(w.volume*100)+" cl");
+  if(typeof w.alcohol==="number"&&Number.isFinite(w.alcohol))bits.push(String(w.alcohol).replace(".",",")+" %");
+  return bits.join(" · ");
+}
+function tileHTML(w){
+  if(!w.image)return `<div class="tile">${bottle(w)}</div>`;
+  return `<div class="tile photo">${bottle(w)}<img class="photo" alt="" src="${esc(w.image)}" onerror="this.remove()"></div>`;
+}
 function card(w,i,opts={}){
-  const on=favs.includes(w.id),hero=i===0&&!opts.plain;
+  const on=favs.includes(w.id),hero=i===0&&!opts.plain&&!w.live;
+  const origin=[w.country,w.grape].filter(Boolean).join(" · ");
+  const meta=w.live?`<span class="meta">${esc(liveFacts(w))}</span>`:`<span class="stock">På lager</span>`;
   return `<article class="card ${hero?"hero":""}" data-id="${w.id}" style="--i:${i};${tileVar(w)}">
     ${hero?`<div class="pick">${gav("wink","sm")}<span>Gustavs favoritt</span></div>`:""}
     <div class="card-top">
       <div class="card-main">
-        <div class="wtype"><i class="dot"></i>${esc(TYPE_LABEL[w.type])}</div>
+        <div class="wtype"><i class="dot"></i>${esc(TYPE_LABEL[w.type]||"")}</div>
         <button class="wine-open wname" type="button">${esc(w.name)}</button>
-        <div class="worigin">${esc(w.country)} · ${esc(w.grape)}</div>
-        <p class="wnote">${esc(w.note)}</p>
-        ${hero?`<p class="wquip">«${esc(w.quip)}»</p>`:""}
+        <div class="worigin">${esc(origin)}</div>
+        ${w.note?`<p class="wnote">${esc(w.note)}</p>`:""}
+        ${hero&&w.quip?`<p class="wquip">«${esc(w.quip)}»</p>`:""}
       </div>
-      <div class="tile">${bottle(w)}</div>
+      ${tileHTML(w)}
     </div>
     ${heartBtn(w.id,on)}
     <div class="card-foot">
-      <div class="pricebox"><span class="price">${w.price}<small>kr</small></span><span class="stock">På lager</span></div>
-      <a class="vin" href="${vinUrl(w)}" target="_blank" rel="noopener">Se på Vinmonopolet${ic("ext")}</a>
+      <div class="pricebox"><span class="price">${nok(w.price)}<small>kr</small></span>${meta}</div>
+      <a class="vin" href="${esc(vinUrl(w))}" target="_blank" rel="noopener">${vinLabel(w)}${ic("ext")}</a>
     </div>
   </article>`;
 }
@@ -434,7 +459,8 @@ function bindList(root){
 bindList($("#cards"));bindList($("#fav-list"));
 
 /* ---------- Favoritter ---------- */
-function renderFavs(){
+async function renderFavs(){
+  await catalogReady;
   const l=$("#fav-list"),list=favs.map(wineById).filter(Boolean);
   if(!list.length){
     l.innerHTML=`<div class="empty empty-fav"><div class="eg">${gustav("hello")}</div><h2 class="title">Ingen favoritter ennå</h2><p class="sub">Trykk på hjertet ved en vin, så husker Gustav den for deg.</p><button class="btn" id="fav-go" type="button">Finn en vin</button></div>`;
@@ -449,24 +475,27 @@ const meter=(v,max=5)=>`<span class="meter" aria-hidden="true">${Array.from({len
 function openSheet(id,from){
   const w=wineById(id);if(!w)return;sheetFrom=from||null;
   const on=favs.includes(id);
+  const meta=w.live?`<span class="meta">${esc(liveFacts(w))}</span>`:`<span class="stock">På lager</span>`;
+  const origin=[w.country,w.region].filter(Boolean).join(" · ");
   $("#sheet-body").innerHTML=`
-    <div class="sh-hero" style="${tileVar(w)}">${bottle(w)}</div>
+    <div class="sh-hero" style="${tileVar(w)}">${w.image?bottle(w)+`<img class="photo" alt="" src="${esc(w.image)}" onerror="this.remove()">`:bottle(w)}</div>
     <div class="sh-pad">
-      <div class="overline" style="${tileVar(w)}"><i class="dot"></i>${esc(TYPE_LABEL[w.type])}</div>
+      <div class="overline" style="${tileVar(w)}"><i class="dot"></i>${esc(TYPE_LABEL[w.type]||"")}</div>
       <h2 class="sh-name" id="sheet-name">${esc(w.name)}</h2>
-      <div class="sh-origin">${esc(w.country)} · ${esc(w.region)}</div>
-      <div class="sh-price"><span class="price">${w.price}<small>kr</small></span><span class="stock">På lager</span></div>
-      <div class="gq">${gav("wink","md")}<div><blockquote>«${esc(w.quip)}»</blockquote><cite>Gustav mener</cite></div></div>
-      <div class="sh-sec"><div class="overline">Smak</div><p>${esc(w.note)}</p></div>
-      <div class="sh-sec"><div class="overline">Passer til</div><p>${esc(w.tip)}</p></div>
+      <div class="sh-origin">${esc(origin)}</div>
+      <div class="sh-price"><span class="price">${nok(w.price)}<small>kr</small></span>${meta}</div>
+      ${w.quip?`<div class="gq">${gav("wink","md")}<div><blockquote>«${esc(w.quip)}»</blockquote><cite>Gustav mener</cite></div></div>`:""}
+      ${w.note?`<div class="sh-sec"><div class="overline">Smak</div><p>${esc(w.note)}</p></div>`:""}
+      ${w.tip?`<div class="sh-sec"><div class="overline">Passer til</div><p>${esc(w.tip)}</p></div>`:""}
       <div class="group facts">
+        ${w.producer?`<div class="kv"><span class="k">Produsent</span><span class="v">${esc(w.producer)}</span></div>`:""}
         <div class="kv"><span class="k">Drue</span><span class="v">${esc(w.grape)}</span></div>
         <div class="kv"><span class="k">Kropp</span><span class="v">${meter(w.body)}${bodyL(w.body)}</span></div>
         <div class="kv"><span class="k">Sødme</span><span class="v">${meter(w.sweet===0?1:w.sweet)}${sweetL(w.sweet)}</span></div>
       </div>
     </div>`;
   $("#sheet-bar").innerHTML=`<button class="heart-btn" type="button" data-id="${w.id}" aria-pressed="${on}" aria-label="${on?"Fjern fra favoritter":"Legg til i favoritter"}">${ic("heart")}</button>
-    <a class="btn" href="${vinUrl(w)}" target="_blank" rel="noopener">Se på Vinmonopolet${ic("ext")}</a>`;
+    <a class="btn" href="${esc(vinUrl(w))}" target="_blank" rel="noopener">${vinLabel(w)}${ic("ext")}</a>`;
   $("#sheet-body").scrollTop=0;
   $("#scrim").hidden=false;$("#sheet").hidden=false;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{$("#scrim").classList.add("on");$("#sheet").classList.add("on")}));
@@ -579,6 +608,32 @@ $("#redo").addEventListener("click",()=>openOnboarding(false));
 /* ---------- Toast ---------- */
 let tt;
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2000)}
+
+/* ---------- Varedata ---------- */
+const LIVE_NOTE="Vareopplysninger og pris er hentet fra Vinmonopolets åpne API. Vinkelner er ikke tilknyttet AS Vinmonopolet. Lagerstatus vises ikke.";
+const FALLBACK_NOTE="Eksempeldata, ikke fra Vinmonopolet. Vinkelner er ikke tilknyttet AS Vinmonopolet.";
+function setDataNote(live){
+  const text=live?LIVE_NOTE:FALLBACK_NOTE;
+  const title=live?"Vinmonopolets åpne API":"Eksempeldata";
+  const res=$("#res-note"),prof=$("#data-note");
+  if(res)res.innerHTML=`<strong>${title}</strong>${text}`;
+  if(prof)prof.innerHTML=`<strong>${title}</strong>${text}`;
+}
+const catalogReady=(async()=>{
+  try{
+    const res=await fetch("data/wines.json",{cache:"no-cache"});
+    if(!res.ok)throw new Error(String(res.status));
+    const data=await res.json();
+    if(!Array.isArray(data)||!data.length)throw new Error("tom");
+    const mapped=data.map(row=>window.VKE.mapProduct(row)).filter(Boolean);
+    if(!mapped.length)throw new Error("ingen");
+    window.VK_WINES=mapped;
+    setDataNote(true);
+  }catch(e){
+    window.VK_WINES=null;
+    setDataNote(false);
+  }
+})();
 
 /* ---------- Start ---------- */
 $$(".screen").forEach(s=>{if(!s.classList.contains("active"))s.setAttribute("aria-hidden","true")});

@@ -5,6 +5,13 @@ on:
     branches:
       - main
   workflow_dispatch:
+  # En push med GITHUB_TOKEN fra «Update wines» starter ikke dette workflowet.
+  # workflow_run kjører etter at vinfila er committet. Checkout peker på main,
+  # ikke head_sha, fordi head_sha er committen jobben startet på.
+  workflow_run:
+    workflows: ["Update wines"]
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -17,6 +24,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -24,6 +32,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
