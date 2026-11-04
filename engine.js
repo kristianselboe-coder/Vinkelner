@@ -196,13 +196,16 @@ function scale12(n,lo,hi){
   const t=Math.max(1,Math.min(12,n));
   return Math.max(lo,Math.min(hi,Math.round(lo+(t-1)/11*(hi-lo))));
 }
+function foldName(s){
+  return String(s||"").toLowerCase().replace(/æ/g,"ae").replace(/ø/g,"o").replace(/å/g,"a").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
 function typeCode(typeName,colour){
-  const t=(typeName||"").toLowerCase(),c=(colour||"").toLowerCase();
-  if(/musserende|perlende|champagne|cava|prosecco/.test(t))return "S";
-  if(/rosé|rose/.test(t)||/rosé|rose/.test(c))return "P";
-  if(/rød/.test(t)||/\brød/.test(c))return "R";
-  if(/hvit/.test(t)||/gul|hvit|strå/.test(c))return "H";
-  if(/sterkvin|søt/.test(t))return /rød/.test(c)?"R":"H";
+  const t=foldName(typeName),c=foldName(colour);
+  if(/musserende|perlende|champagne|cava|prosecco|sparkling|cremant/.test(t))return "S";
+  if(/rosevin|rose wine|\brose\b/.test(t)||/\brose\b/.test(c))return "P";
+  if(/rodvin|red wine/.test(t)||/\brod\b/.test(c))return "R";
+  if(/hvitvin|white wine|\bhvit\b/.test(t)||/gul|\bhvit\b|stra/.test(c))return "H";
+  if(/sterkvin|fortified|sotvin|sweet wine|dessert/.test(t))return /\brod\b/.test(c)?"R":"H";
   return null;
 }
 function tagsFrom(pairing,taste){

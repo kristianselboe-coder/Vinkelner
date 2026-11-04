@@ -52,6 +52,11 @@ test("rødvin og storfe blir biff, søtvin får dessert", () => {
   assert.ok(sweet.tags.includes("dessert"));
 });
 
+test("engelsk typenavn fra JSON blir rødvin", () => {
+  const w = map({ id: "9", name: "Red", type: "Red wine", price: 150, pairing: [], grapes: [] });
+  assert.equal(w.type, "R");
+});
+
 test("dropper rad uten pris eller ukjent type", () => {
   assert.equal(map({ id: "x", name: "Øl", type: "Øl", price: 80 }), null);
   assert.equal(map({ id: "x", name: "Vin", type: "Hvitvin" }), null);

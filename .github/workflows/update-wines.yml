@@ -5,6 +5,11 @@ on:
     # 02:00 UTC. Det er 03:00 i Oslo om vinteren (CET) og 04:00 om sommeren (CEST).
     - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      debug:
+        description: "Bare første side: logg rå produkter og nøkler, ikke skriv fil"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,8 +30,10 @@ jobs:
         run: node scripts/fetch-wines.mjs
         env:
           VINMONOPOLET_API_KEY: ${{ secrets.VINMONOPOLET_API_KEY }}
+          VINMONOPOLET_DEBUG: ${{ github.event.inputs.debug }}
 
       - name: Commit data/wines.json if it changed
+        if: github.event.inputs.debug != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
